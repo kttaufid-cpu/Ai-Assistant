@@ -17,7 +17,8 @@ export type MemoryExtractionAgent =
   | 'layer-context'
   | 'layer-experience'
   | 'layer-identity'
-  | 'layer-preference';
+  | 'layer-preference'
+  | 'user-story';
 
 export interface ExtractorRunOptions<RO> extends ExtractorOptions {
   contextProvider: MemoryContextProvider<{ topK?: number }>;
@@ -110,7 +111,7 @@ export interface MemoryContextProvider<
   P extends Record<string, unknown> = Record<string, unknown>,
   R extends Record<string, unknown> = Record<string, unknown>,
 > {
-  buildContext(job: MemoryExtractionJob, options?: P): Promise<BuiltContext<R>>;
+  buildContext(userId: string, sourceId: string, options?: P): Promise<BuiltContext<R>>;
 }
 
 export interface MemoryResultRecorder<T = Record<string, unknown>> {
@@ -169,4 +170,23 @@ export interface MemoryExtractionResult {
 
 export interface TemplateProps {
   [key: string]: unknown;
+}
+
+export interface StoryTemplateProps extends ExtractorTemplateProps {
+  existingStory?: string;
+  recentEvents?: string;
+  retrievedMemories?: string;
+  storyNotes?: string;
+  userProfile?: string;
+}
+
+export interface StoryExtractorOptions extends ExtractorOptions, StoryTemplateProps {}
+
+export interface UserStoryExtractionResult {
+  diff?: string | null;
+  memoryIds?: string[];
+  reasoning?: string | null;
+  sourceIds?: string[];
+  story: string;
+  summary?: string | null;
 }

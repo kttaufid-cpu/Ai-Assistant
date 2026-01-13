@@ -25,6 +25,7 @@ export type MemoryAgentConfig = MemoryAgentPublicConfig & {
   language?: string;
   model: string;
 };
+
 export type MemoryLayerExtractorConfig = MemoryLayerExtractorPublicConfig &
   MemoryAgentConfig & {
     layers: Record<GlobalMemoryLayer, string>;
@@ -33,6 +34,7 @@ export type MemoryLayerExtractorConfig = MemoryLayerExtractorPublicConfig &
 export interface MemoryExtractionPrivateConfig {
   agentGateKeeper: MemoryAgentConfig;
   agentLayerExtractor: MemoryLayerExtractorConfig;
+  agentStory: MemoryAgentConfig;
   concurrency?: number;
   embedding: MemoryAgentConfig;
   featureFlags: {
@@ -122,6 +124,24 @@ const parseEmbeddingAgent = (
   };
 };
 
+const parseStoryAgent = (
+  fallbackModel: string,
+  fallbackProvider?: string,
+  fallbackApiKey?: string,
+): MemoryAgentConfig => {
+  const model = process.env.MEMORY_USER_MEMORY_STORY_AGENT_MODEL || fallbackModel;
+  const provider =
+    process.env.MEMORY_USER_MEMORY_STORY_AGENT_PROVIDER || fallbackProvider || DEFAULT_PROVIDER;
+
+  return {
+    apiKey: process.env.MEMORY_USER_MEMORY_STORY_AGENT_API_KEY ?? fallbackApiKey,
+    baseURL: process.env.MEMORY_USER_MEMORY_STORY_AGENT_BASE_URL,
+    contextLimit: parseTokenLimitEnv(process.env.MEMORY_USER_MEMORY_STORY_AGENT_CONTEXT_LIMIT),
+    model,
+    provider,
+  };
+};
+
 const parseExtractorAgentObservabilityS3 = () => {
   const accessKeyId = process.env.MEMORY_USER_MEMORY_EXTRACTOR_S3_ACCESS_KEY_ID;
   const secretAccessKey = process.env.MEMORY_USER_MEMORY_EXTRACTOR_S3_SECRET_ACCESS_KEY;
@@ -160,6 +180,7 @@ const sanitizeAgent = (agent?: MemoryAgentConfig): MemoryAgentPublicConfig | und
 export const parseMemoryExtractionConfig = (): MemoryExtractionPrivateConfig => {
   const agentGateKeeper = parseGateKeeperAgent();
   const agentLayerExtractor = parseLayerExtractorAgent(agentGateKeeper.model);
+  const agentStory = parseStoryAgent(agentGateKeeper.model);
   const embedding = parseEmbeddingAgent(
     agentLayerExtractor.model,
     agentLayerExtractor.provider || DEFAULT_PROVIDER,
@@ -204,6 +225,7 @@ export const parseMemoryExtractionConfig = (): MemoryExtractionPrivateConfig => 
   return {
     agentGateKeeper,
     agentLayerExtractor,
+    agentStory,
     concurrency,
     embedding,
     featureFlags,

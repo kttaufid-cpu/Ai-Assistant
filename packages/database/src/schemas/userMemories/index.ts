@@ -242,3 +242,5 @@ export type UserMemoryExperiencesWithoutVectors = Omit<
   'situationVector' | 'actionVector' | 'keyLearningVector'
 >;
 export type NewUserMemoryExperience = typeof userMemoriesExperiences.$inferInsert;
+
+export * from './story';

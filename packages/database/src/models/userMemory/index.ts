@@ -4,3 +4,4 @@ export * from './identity';
 export * from './model';
 export * from './preference';
 export * from './sources/benchmarkLoCoMo';
+export * from './story';

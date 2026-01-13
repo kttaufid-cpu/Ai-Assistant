@@ -42,11 +42,7 @@ describe('BenchmarkLocomoContextProvider', () => {
       userId,
     });
 
-    const result = await provider.buildContext({
-      source: MemorySourceType.BenchmarkLocomo,
-      sourceId,
-      userId,
-    });
+    const result = await provider.buildContext(userId, sourceId);
 
     const { context } = result;
     expect(result.sourceId).toBe(sourceId);

@@ -14,6 +14,7 @@ import {
 } from '@/server/services/memory/userMemory/extract';
 import { Client } from '@upstash/qstash'
 import { parseMemoryExtractionConfig } from '@/server/globalConfig/parseMemoryExtractionConfig';
+import { URL } from 'node:url';
 
 const { upstashWorkflowExtraHeaders } = parseMemoryExtractionConfig();
 
@@ -115,6 +116,26 @@ export const { POST } = serve<MemoryExtractionPayloadInput>((context) =>
         console.log('[chat-topic][batch] Batch topic processing workflow completed', {
           processedTopics: payload.topicIds.length,
         });
+
+        // Trigger user story update after topic processing using the same baseUrl.
+        if (payload.baseUrl && payload.userIds.length > 0) {
+          const storyUrl = new URL('/api/workflows/user-story/process', payload.baseUrl).toString();
+          await context.run('memory:user-story:update', async () => {
+            const res = await fetch(storyUrl, {
+              body: JSON.stringify({ userIds: payload.userIds }),
+              headers: {
+                'Content-Type': 'application/json',
+                ...upstashWorkflowExtraHeaders,
+              },
+              method: 'POST',
+            });
+
+            if (!res.ok) {
+              const text = await res.text();
+              throw new Error(`User story workflow trigger failed: ${res.status} ${text}`);
+            }
+          });
+        }
 
         span.setStatus({ code: SpanStatusCode.OK });
 
