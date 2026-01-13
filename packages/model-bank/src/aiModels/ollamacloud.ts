@@ -45,7 +45,8 @@ const ollamaCloudModels: AIChatModelCard[] = [
       vision: true,
     },
     contextWindowTokens: 1_048_576,
-    description: 'Gemini 3 Flash 是为速度而打造的最智能的模型，将前沿智能与卓越的搜索接地相结合。',
+    description:
+      'Gemini 3 Flash is the most intelligent model built for speed, combining cutting-edge intelligence with exceptional search grounding.',
     displayName: 'Gemini 3 Flash Preview',
     id: 'gemini-3-flash-preview',
     releasedAt: '2025-12-17',
@@ -68,7 +69,8 @@ const ollamaCloudModels: AIChatModelCard[] = [
       reasoning: true,
     },
     contextWindowTokens: 204_800,
-    description: 'MiniMax M2 是专为编码和代理工作流程构建的高效大型语言模型。',
+    description:
+      'MiniMax M2 is an efficient large language model specifically built for coding and agent workflows.',
     displayName: 'MiniMax M2',
     id: 'minimax-m2',
     type: 'chat',
@@ -80,7 +82,7 @@ const ollamaCloudModels: AIChatModelCard[] = [
     },
     contextWindowTokens: 200_000,
     description:
-      'GLM-4.7 是智谱最新旗舰模型，面向 Agentic Coding 场景强化了编码能力、长程任务规划与工具协同，并在多个公开基准的当期榜单中取得开源模型中的领先表现。通用能力提升，回复更简洁自然，写作更具沉浸感。在执行复杂智能体任务，在工具调用时指令遵循更强，Artifacts 与 Agentic Coding 的前端美感和长程任务完成效率进一步提升。',
+      "GLM-4.7 is Zhipu's latest flagship model, strengthening coding capabilities, long-term task planning, and tool collaboration for Agentic Coding scenarios, and achieving leading performance among open-source models in multiple public benchmarks of the current period. General capabilities are improved, responses are more concise and natural, writing is more immersive. In executing complex agent tasks, instruction following is stronger during tool calls, and the front-end aesthetics and long-term task completion efficiency of Artifacts and Agentic Coding are further improved.",
     displayName: 'GLM-4.7',
     enabled: true,
     id: 'glm-4.7',
@@ -93,7 +95,7 @@ const ollamaCloudModels: AIChatModelCard[] = [
     },
     contextWindowTokens: 200_000,
     description:
-      '智谱旗舰模型 GLM-4.6 (355B) 在高级编码、长文本处理、推理与智能体能力上全面超越前代，尤其在编程能力上对齐 Claude Sonnet 4，成为国内顶尖的 Coding 模型。',
+      "Zhipu's flagship model GLM-4.6 (355B) comprehensively surpasses previous generations in advanced coding, long-text processing, reasoning, and agent capabilities, especially aligning with Claude Sonnet 4 in programming capabilities, becoming China's top Coding model.",
     displayName: 'GLM-4.6',
     id: 'glm-4.6',
     type: 'chat',

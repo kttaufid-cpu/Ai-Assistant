@@ -182,7 +182,8 @@ const googleChatModels: AIChatModelCard[] = [
       vision: true,
     },
     contextWindowTokens: 1_048_576 + 65_536,
-    description: 'Gemini 3 Flash 是为速度而打造的最智能的模型，将前沿智能与卓越的搜索接地相结合。',
+    description:
+      'Gemini 3 Flash is the most intelligent model built for speed, combining cutting-edge intelligence with exceptional search grounding.',
     displayName: 'Gemini 3 Flash Preview',
     enabled: true,
     id: 'gemini-3-flash-preview',
@@ -693,43 +694,6 @@ const googleChatModels: AIChatModelCard[] = [
       ],
     },
     releasedAt: '2025-02-05',
-    type: 'chat',
-  },
-  {
-    abilities: {
-      vision: true,
-    },
-    contextWindowTokens: 1_048_576 + 32_768,
-    description:
-      'LearnLM is an experimental, task-specific model trained on learning science principles to follow system instructions in teaching/learning scenarios, acting as an expert tutor.',
-    displayName: 'LearnLM 2.0 Flash Experimental',
-    id: 'learnlm-2.0-flash-experimental',
-    maxOutput: 32_768,
-    pricing: {
-      units: [
-        { name: 'textInput', rate: 0, strategy: 'fixed', unit: 'millionTokens' },
-        { name: 'textOutput', rate: 0, strategy: 'fixed', unit: 'millionTokens' },
-      ],
-    },
-    type: 'chat',
-  },
-  {
-    abilities: {
-      vision: true,
-    },
-    contextWindowTokens: 40_959,
-    description:
-      'LearnLM is an experimental, task-specific model trained on learning science principles to follow system instructions in teaching/learning scenarios, acting as an expert tutor.',
-    displayName: 'LearnLM 1.5 Pro Experimental',
-    id: 'learnlm-1.5-pro-experimental',
-    maxOutput: 8192,
-    pricing: {
-      units: [
-        { name: 'textInput', rate: 0, strategy: 'fixed', unit: 'millionTokens' },
-        { name: 'textOutput', rate: 0, strategy: 'fixed', unit: 'millionTokens' },
-      ],
-    },
-    releasedAt: '2024-11-19',
     type: 'chat',
   },
   {

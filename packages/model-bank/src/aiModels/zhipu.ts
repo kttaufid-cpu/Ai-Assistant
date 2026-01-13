@@ -9,10 +9,100 @@ const zhipuChatModels: AIChatModelCard[] = [
       functionCall: true,
       reasoning: true,
       search: true,
+      vision: true,
+    },
+    contextWindowTokens: 131_072,
+    description:
+      'GLM-4.6V is an important iteration of the GLM series in the multimodal direction. It increases the training context window to 128k tokens, achieves SOTA in visual understanding accuracy among models of similar parameter scale, and for the first time natively integrates Function Call (tool calling) capability into a vision model within the model architecture, bridging the path from "visual perception" to "executable actions". It provides a unified technical foundation for multimodal Agents in real business scenarios.',
+    displayName: 'GLM-4.6V',
+    enabled: true,
+    id: 'glm-4.6v',
+    maxOutput: 32_768,
+    pricing: {
+      currency: 'CNY',
+      units: [
+        {
+          lookup: {
+            prices: {
+              '[0, 0.032]': 0.2,
+              '[0.032, infinity]': 0.4,
+            },
+            pricingParams: ['textInput'],
+          },
+          name: 'textInput_cacheRead',
+          strategy: 'lookup',
+          unit: 'millionTokens',
+        },
+        {
+          lookup: {
+            prices: {
+              '[0, 0.032]': 1,
+              '[0.032, infinity]': 2,
+            },
+            pricingParams: ['textInput'],
+          },
+          name: 'textInput',
+          strategy: 'lookup',
+          unit: 'millionTokens',
+        },
+        {
+          lookup: {
+            prices: {
+              '[0, 0.032]': 3,
+              '[0.032, infinity]': 6,
+            },
+            pricingParams: ['textInput'],
+          },
+          name: 'textOutput',
+          strategy: 'lookup',
+          unit: 'millionTokens',
+        },
+        { name: 'textInput_cacheWrite', rate: 0, strategy: 'fixed', unit: 'millionTokens' },
+      ],
+    },
+    settings: {
+      extendParams: ['enableReasoning'],
+      searchImpl: 'params',
+    },
+    type: 'chat',
+  },
+  {
+    abilities: {
+      functionCall: true,
+      reasoning: true,
+      search: true,
+      vision: true,
+    },
+    contextWindowTokens: 131_072,
+    description:
+      'GLM-4.6V-Flash is the free version of GLM-4.6V, an important iteration of the GLM series in the multimodal direction, supporting the toggle of thinking mode on or off.',
+    displayName: 'GLM-4.6V-Flash',
+    enabled: true,
+    id: 'glm-4.6v-flash',
+    maxOutput: 32_768,
+    pricing: {
+      currency: 'CNY',
+      units: [
+        { name: 'textInput_cacheRead', rate: 0, strategy: 'fixed', unit: 'millionTokens' },
+        { name: 'textInput', rate: 0, strategy: 'fixed', unit: 'millionTokens' },
+        { name: 'textOutput', rate: 0, strategy: 'fixed', unit: 'millionTokens' },
+      ],
+    },
+    settings: {
+      extendParams: ['enableReasoning'],
+      searchImpl: 'params',
+    },
+    type: 'chat',
+  },
+  {
+    abilities: {
+      functionCall: true,
+      reasoning: true,
+      search: true,
     },
     contextWindowTokens: 200_000,
     description:
-      'GLM-4.7 是智谱最新旗舰模型，面向 Agentic Coding 场景强化了编码能力、长程任务规划与工具协同，并在多个公开基准的当期榜单中取得开源模型中的领先表现。通用能力提升，回复更简洁自然，写作更具沉浸感。在执行复杂智能体任务，在工具调用时指令遵循更强，Artifacts 与 Agentic Coding 的前端美感和长程任务完成效率进一步提升。',
+      "GLM-4.7 is Zhipu's latest flagship model, strengthened in coding capabilities, long-term task planning, and tool coordination for Agentic Coding scenarios. It achieves leading performance among open-source models on multiple public benchmarks. General capabilities are enhanced with more concise and natural responses and more immersive writing. In executing complex agent tasks, instruction following in tool calling is stronger, and front-end aesthetics in Artifacts and Agentic Coding as well as long-term task completion efficiency are further improved.",
     displayName: 'GLM-4.7',
     enabled: true,
     id: 'glm-4.7',
@@ -75,7 +165,7 @@ const zhipuChatModels: AIChatModelCard[] = [
     },
     contextWindowTokens: 200_000,
     description:
-      '智谱最新旗舰模型 GLM-4.6 (355B) 在高级编码、长文本处理、推理与智能体能力上全面超越前代，尤其在编程能力上对齐 Claude Sonnet 4，成为国内顶尖的 Coding 模型。',
+      "Zhipu's latest flagship model GLM-4.6 (355B) comprehensively surpasses its predecessors in advanced coding, long-text processing, reasoning, and agent capabilities. Especially in programming ability, it aligns with Claude Sonnet 4, becoming a top domestic Coding model.",
     displayName: 'GLM-4.6',
     id: 'glm-4.6',
     maxOutput: 131_072,
@@ -140,7 +230,6 @@ const zhipuChatModels: AIChatModelCard[] = [
     description:
       'Zhipu’s next-generation MoE vision reasoning model has 106B total parameters with 12B active, achieving SOTA among similarly sized open-source multimodal models across image, video, document understanding, and GUI tasks.',
     displayName: 'GLM-4.5V',
-    enabled: true,
     id: 'glm-4.5v',
     maxOutput: 16_384,
     pricing: {
@@ -567,7 +656,8 @@ const zhipuChatModels: AIChatModelCard[] = [
       search: true,
     },
     contextWindowTokens: 131_072,
-    description: 'Fast and low-cost: Flash-enhanced with ultra-fast reasoning and higher concurrency.',
+    description:
+      'Fast and low-cost: Flash-enhanced with ultra-fast reasoning and higher concurrency.',
     displayName: 'GLM-Z1-FlashX',
     id: 'glm-z1-flashx',
     maxOutput: 32_768,
@@ -773,7 +863,7 @@ const zhipuChatModels: AIChatModelCard[] = [
       'GLM-4V-Flash focuses on efficient single-image understanding for fast analysis scenarios such as real-time or batch image processing.',
     displayName: 'GLM-4V-Flash',
     id: 'glm-4v-flash',
-    maxOutput: 8192,
+    maxOutput: 1024,
     pricing: {
       currency: 'CNY',
       units: [
@@ -789,9 +879,11 @@ const zhipuChatModels: AIChatModelCard[] = [
       vision: true,
     },
     contextWindowTokens: 16_000,
-    description: 'GLM-4V-Plus understands video and multiple images, suitable for multimodal tasks.',
+    description:
+      'GLM-4V-Plus understands video and multiple images, suitable for multimodal tasks.',
     displayName: 'GLM-4V-Plus-0111',
     id: 'glm-4v-plus-0111',
+    maxOutput: 8192,
     pricing: {
       currency: 'CNY',
       units: [

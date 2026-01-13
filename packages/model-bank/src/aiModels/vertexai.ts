@@ -72,7 +72,8 @@ const vertexaiChatModels: AIChatModelCard[] = [
       vision: true,
     },
     contextWindowTokens: 1_048_576 + 65_536,
-    description: 'Gemini 3 Flash 是为速度而打造的最智能的模型，将前沿智能与卓越的搜索接地相结合。',
+    description:
+      'Gemini 3 Flash is the most intelligent model built for speed, combining cutting-edge intelligence with exceptional search grounding.',
     displayName: 'Gemini 3 Flash Preview',
     enabled: true,
     id: 'gemini-3-flash-preview',
@@ -107,7 +108,7 @@ const vertexaiChatModels: AIChatModelCard[] = [
     },
     contextWindowTokens: 131_072 + 32_768,
     description:
-      'Gemini 3 Pro Image（Nano Banana Pro）是 Google 的图像生成模型，同时支持多模态对话。',
+      "Gemini 3 Pro Image (Nano Banana Pro) is Google's image generation model that also supports multimodal dialogue.",
     displayName: 'Nano Banana Pro',
     enabled: true,
     id: 'gemini-3-pro-image-preview',
