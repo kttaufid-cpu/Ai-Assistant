@@ -1,3 +1,5 @@
+import { ssrfSafeFetch } from '@lobechat/ssrf-safe-fetch';
+
 interface UriParserResult {
   base64: string | null;
   mimeType: string | null;
@@ -72,7 +74,8 @@ export interface ExternalUrlValidation {
 }
 
 /**
- * Check if a URL is a public external URL (not localhost, private IP, or local file)
+ * Check if a URL is an external HTTP(S) URL
+ * SSRF protection is enforced by ssrfSafeFetch during validation
  */
 export const isPublicExternalUrl = (url: string): boolean => {
   try {
@@ -82,23 +85,6 @@ export const isPublicExternalUrl = (url: string): boolean => {
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
       return false;
     }
-
-    const hostname = parsed.hostname.toLowerCase();
-
-    // Block localhost
-    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') {
-      return false;
-    }
-
-    // Block private IP ranges
-    // 10.0.0.0/8
-    if (/^10\./.test(hostname)) return false;
-    // 172.16.0.0/12
-    if (/^172\.(1[6-9]|2\d|3[01])\./.test(hostname)) return false;
-    // 192.168.0.0/16
-    if (/^192\.168\./.test(hostname)) return false;
-    // 169.254.0.0/16 (link-local)
-    if (/^169\.254\./.test(hostname)) return false;
 
     return true;
   } catch {
@@ -116,7 +102,7 @@ export const isPublicExternalUrl = (url: string): boolean => {
 export const validateExternalUrl = async (url: string): Promise<ExternalUrlValidation> => {
   try {
     // Perform HEAD request to get headers without downloading the file
-    const res = await fetch(url, {
+    const res = await ssrfSafeFetch(url, {
       headers: {
         'User-Agent': 'LobeChat/1.0 (https://lobehub.com)',
       },
