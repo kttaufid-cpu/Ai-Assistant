@@ -67,6 +67,8 @@ export interface ExternalUrlValidation {
   contentLength: number;
   /** Content-Type from response headers */
   contentType: string;
+  /** Whether the URL was rejected due to size limit */
+  isTooLarge?: boolean;
   /** Whether the URL is valid for external URL usage */
   isValid: boolean;
   /** Reason for invalid URL */
@@ -144,6 +146,7 @@ export const validateExternalUrl = async (url: string): Promise<ExternalUrlValid
       return {
         contentLength,
         contentType,
+        isTooLarge: true,
         isValid: false,
         reason: `File too large: ${contentLength} bytes (max ${MAX_EXTERNAL_URL_SIZE} bytes)`,
       };
