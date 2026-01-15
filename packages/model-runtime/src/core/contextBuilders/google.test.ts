@@ -4,7 +4,7 @@ import * as imageToBase64Module from '@lobechat/utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ChatCompletionTool, OpenAIChatMessage, UserMessageContentPart } from '../../types';
-import { isPublicExternalUrl, parseDataUri, validateExternalUrl } from '../../utils/uriParser';
+import { parseDataUri } from '../../utils/uriParser';
 import {
   GEMINI_MAGIC_THOUGHT_SIGNATURE,
   buildGoogleMessage,
@@ -16,9 +16,7 @@ import {
 
 // Mock the utils
 vi.mock('../../utils/uriParser', () => ({
-  isPublicExternalUrl: vi.fn(),
   parseDataUri: vi.fn(),
-  validateExternalUrl: vi.fn(),
 }));
 
 vi.mock('../../utils/imageToBase64', () => ({
@@ -96,8 +94,6 @@ describe('google contextBuilders', () => {
         mimeType: 'image/png',
       });
 
-      vi.mocked(isPublicExternalUrl).mockReturnValueOnce(false);
-
       const content: UserMessageContentPart = {
         image_url: { url: imageUrl },
         type: 'image_url',
@@ -114,80 +110,6 @@ describe('google contextBuilders', () => {
       });
 
       expect(imageToBase64Module.imageUrlToBase64).toHaveBeenCalledWith(imageUrl);
-    });
-
-    it('should handle external URL images with fileData', async () => {
-      const imageUrl = 'https://example.com/image.png';
-
-      vi.mocked(parseDataUri).mockReturnValueOnce({
-        base64: null,
-        mimeType: 'image/png',
-        type: 'url',
-      });
-
-      vi.mocked(isPublicExternalUrl).mockReturnValueOnce(true);
-      vi.mocked(validateExternalUrl).mockResolvedValueOnce({
-        contentLength: 1024,
-        contentType: 'image/png',
-        isValid: true,
-      });
-
-      const imageToBase64Spy = vi
-        .spyOn(imageToBase64Module, 'imageUrlToBase64')
-        .mockResolvedValueOnce({
-          base64: 'mockBase64Data',
-          mimeType: 'image/png',
-        });
-
-      const content: UserMessageContentPart = {
-        image_url: { url: imageUrl },
-        type: 'image_url',
-      };
-
-      const result = await buildGooglePart(content);
-
-      expect(result).toEqual({
-        fileData: {
-          fileUri: imageUrl,
-          mimeType: 'image/png',
-        },
-        thoughtSignature: GEMINI_MAGIC_THOUGHT_SIGNATURE,
-      });
-      expect(imageToBase64Spy).not.toHaveBeenCalled();
-    });
-
-    it('should throw when external URL exceeds size limit', async () => {
-      const imageUrl = 'https://example.com/large-image.png';
-
-      vi.mocked(parseDataUri).mockReturnValueOnce({
-        base64: null,
-        mimeType: 'image/png',
-        type: 'url',
-      });
-
-      vi.mocked(isPublicExternalUrl).mockReturnValueOnce(true);
-      vi.mocked(validateExternalUrl).mockResolvedValueOnce({
-        contentLength: 120 * 1024 * 1024,
-        contentType: 'image/png',
-        isTooLarge: true,
-        isValid: false,
-        reason: 'File too large: 120MB',
-      });
-
-      const imageToBase64Spy = vi
-        .spyOn(imageToBase64Module, 'imageUrlToBase64')
-        .mockResolvedValueOnce({
-          base64: 'mockBase64Data',
-          mimeType: 'image/png',
-        });
-
-      const content: UserMessageContentPart = {
-        image_url: { url: imageUrl },
-        type: 'image_url',
-      };
-
-      await expect(buildGooglePart(content)).rejects.toThrow(RangeError);
-      expect(imageToBase64Spy).not.toHaveBeenCalled();
     });
 
     it('should handle base64 audio', async () => {
@@ -230,8 +152,6 @@ describe('google contextBuilders', () => {
         mimeType: 'audio/mpeg',
       });
 
-      vi.mocked(isPublicExternalUrl).mockReturnValueOnce(false);
-
       const content: UserMessageContentPart = {
         audio_url: { url: audioUrl },
         type: 'audio_url',
@@ -249,41 +169,6 @@ describe('google contextBuilders', () => {
 
       expect(imageToBase64Module.imageUrlToBase64).toHaveBeenCalledWith(audioUrl);
     });
-
-    it('should throw when external URL audio exceeds size limit', async () => {
-      const audioUrl = 'https://example.com/large-audio.mp3';
-
-      vi.mocked(parseDataUri).mockReturnValueOnce({
-        base64: null,
-        mimeType: 'audio/mpeg',
-        type: 'url',
-      });
-
-      vi.mocked(isPublicExternalUrl).mockReturnValueOnce(true);
-      vi.mocked(validateExternalUrl).mockResolvedValueOnce({
-        contentLength: 120 * 1024 * 1024,
-        contentType: 'audio/mpeg',
-        isTooLarge: true,
-        isValid: false,
-        reason: 'File too large: 120MB',
-      });
-
-      const imageToBase64Spy = vi
-        .spyOn(imageToBase64Module, 'imageUrlToBase64')
-        .mockResolvedValueOnce({
-          base64: 'mockAudioBase64Data',
-          mimeType: 'audio/mpeg',
-        });
-
-      const content: UserMessageContentPart = {
-        audio_url: { url: audioUrl },
-        type: 'audio_url',
-      };
-
-      await expect(buildGooglePart(content)).rejects.toThrow(RangeError);
-      expect(imageToBase64Spy).not.toHaveBeenCalled();
-    });
-
 
     it('should throw TypeError for unsupported image URL types', async () => {
       const unsupportedImageUrl = 'unsupported://example.com/image.png';
@@ -342,8 +227,6 @@ describe('google contextBuilders', () => {
         mimeType: 'video/mp4',
       });
 
-      vi.mocked(isPublicExternalUrl).mockReturnValueOnce(false);
-
       const content: UserMessageContentPart = {
         type: 'video_url',
         video_url: { url: videoUrl },
@@ -360,41 +243,6 @@ describe('google contextBuilders', () => {
       });
 
       expect(imageToBase64Module.imageUrlToBase64).toHaveBeenCalledWith(videoUrl);
-    });
-
-
-    it('should throw when external URL video exceeds size limit', async () => {
-      const videoUrl = 'https://example.com/large-video.mp4';
-
-      vi.mocked(parseDataUri).mockReturnValueOnce({
-        base64: null,
-        mimeType: 'video/mp4',
-        type: 'url',
-      });
-
-      vi.mocked(isPublicExternalUrl).mockReturnValueOnce(true);
-      vi.mocked(validateExternalUrl).mockResolvedValueOnce({
-        contentLength: 120 * 1024 * 1024,
-        contentType: 'video/mp4',
-        isTooLarge: true,
-        isValid: false,
-        reason: 'File too large: 120MB',
-      });
-
-      const imageToBase64Spy = vi
-        .spyOn(imageToBase64Module, 'imageUrlToBase64')
-        .mockResolvedValueOnce({
-          base64: 'mockVideoBase64Data',
-          mimeType: 'video/mp4',
-        });
-
-      const content: UserMessageContentPart = {
-        type: 'video_url',
-        video_url: { url: videoUrl },
-      };
-
-      await expect(buildGooglePart(content)).rejects.toThrow(RangeError);
-      expect(imageToBase64Spy).not.toHaveBeenCalled();
     });
   });
 

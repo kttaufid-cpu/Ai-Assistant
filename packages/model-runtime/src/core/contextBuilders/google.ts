@@ -9,7 +9,7 @@ import { imageUrlToBase64 } from '@lobechat/utils';
 
 import { ChatCompletionTool, OpenAIChatMessage, UserMessageContentPart } from '../../types';
 import { safeParseJSON } from '../../utils/safeParseJSON';
-import { isPublicExternalUrl, parseDataUri, validateExternalUrl } from '../../utils/uriParser';
+import { parseDataUri } from '../../utils/uriParser';
 
 /**
  * Magic thoughtSignature
@@ -20,10 +20,6 @@ export const GEMINI_MAGIC_THOUGHT_SIGNATURE = 'context_engineering_is_the_way_to
 /**
  * Convert OpenAI content part to Google Part format
  *
- * TODO: urlContext tool only supports files up to 34MB. In the future, we should
- * detect file URLs in the conversation and use External URL feature (fileData.fileUri)
- * for files larger than 34MB to avoid urlContext limitations.
- * @see https://ai.google.dev/gemini-api/docs/file-input-methods
  */
 export const buildGooglePart = async (
   content: UserMessageContentPart,
@@ -56,28 +52,7 @@ export const buildGooglePart = async (
 
       if (type === 'url') {
         const url = content.image_url.url;
-
-        // Try to use External URL feature for public URLs to avoid re-uploading
-        // This allows Google to fetch the file directly, reducing transfer costs
-        if (isPublicExternalUrl(url)) {
-          const validation = await validateExternalUrl(url);
-          if (validation.isValid) {
-            return {
-              fileData: {
-                fileUri: url,
-                mimeType: validation.contentType,
-              },
-              thoughtSignature: GEMINI_MAGIC_THOUGHT_SIGNATURE,
-            };
-          }
-          if (validation.isTooLarge) {
-            // TODO: use File API for large files (> 100MB)
-            throw new RangeError(validation.reason || 'External URL file too large');
-          }
-          // If validation fails, fall back to base64 conversion
-        }
-
-        // Fallback: convert URL to base64 (for private/local URLs or failed validation)
+        // Convert URL to base64
         const { base64: urlBase64, mimeType: urlMimeType } = await imageUrlToBase64(url);
 
         return {
@@ -105,26 +80,7 @@ export const buildGooglePart = async (
 
       if (type === 'url') {
         const url = content.audio_url.url;
-
-        // Try to use External URL feature for public URLs
-        if (isPublicExternalUrl(url)) {
-          const validation = await validateExternalUrl(url);
-          if (validation.isValid) {
-            return {
-              fileData: {
-                fileUri: url,
-                mimeType: validation.contentType,
-              },
-              thoughtSignature: GEMINI_MAGIC_THOUGHT_SIGNATURE,
-            };
-          }
-          if (validation.isTooLarge) {
-            // TODO: use File API for large files (> 100MB)
-            throw new RangeError(validation.reason || 'External URL file too large');
-          }
-        }
-
-        // Fallback: convert URL to base64
+        // Convert URL to base64
         const { base64: urlBase64, mimeType: urlMimeType } = await imageUrlToBase64(url);
 
         return {
@@ -152,28 +108,7 @@ export const buildGooglePart = async (
 
       if (type === 'url') {
         const url = content.video_url.url;
-
-        // Try to use External URL feature for public URLs
-        // Note: External URL currently doesn't support video types per Google docs,
-        // but we check anyway in case Google adds support in the future
-        if (isPublicExternalUrl(url)) {
-          const validation = await validateExternalUrl(url);
-          if (validation.isValid) {
-            return {
-              fileData: {
-                fileUri: url,
-                mimeType: validation.contentType,
-              },
-              thoughtSignature: GEMINI_MAGIC_THOUGHT_SIGNATURE,
-            };
-          }
-          if (validation.isTooLarge) {
-            // TODO: use File API for large files (> 100MB)
-            throw new RangeError(validation.reason || 'External URL file too large');
-          }
-        }
-
-        // Fallback: convert URL to base64
+        // Convert URL to base64
         // Use imageUrlToBase64 for SSRF protection (works for any binary data including videos)
         // Note: This might need size/duration limits for practical use
         const { base64: urlBase64, mimeType: urlMimeType } = await imageUrlToBase64(url);
@@ -186,7 +121,6 @@ export const buildGooglePart = async (
 
       throw new TypeError(`currently we don't support video url: ${content.video_url.url}`);
     }
-
   }
 };
 

@@ -1,12 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { ssrfSafeFetch } from '@lobechat/ssrf-safe-fetch';
-
-import { parseDataUri, validateExternalUrl } from './uriParser';
-
-vi.mock('@lobechat/ssrf-safe-fetch', () => ({
-  ssrfSafeFetch: vi.fn(),
-}));
+import { parseDataUri } from './uriParser';
 
 describe('parseDataUri', () => {
   it('should parse a valid data URI', () => {
@@ -31,24 +25,5 @@ describe('parseDataUri', () => {
     const emptyInput = '';
     const result = parseDataUri(emptyInput);
     expect(result).toEqual({ base64: null, mimeType: null, type: null });
-  });
-});
-
-describe('validateExternalUrl', () => {
-  it('should mark oversized files as too large regardless of content type', async () => {
-    vi.mocked(ssrfSafeFetch).mockResolvedValueOnce({
-      ok: true,
-      headers: new Headers({
-        'content-length': String(120 * 1024 * 1024),
-        'content-type': 'audio/mpeg',
-      }),
-      status: 200,
-      statusText: 'OK',
-    } as Response);
-
-    const result = await validateExternalUrl('https://example.com/large-audio.mp3');
-
-    expect(result.isValid).toBe(false);
-    expect(result.isTooLarge).toBe(true);
   });
 });
