@@ -122,6 +122,83 @@ describe('google contextBuilders', () => {
       expect(imageToBase64Module.imageUrlToBase64).toHaveBeenCalledWith(imageUrl);
     });
 
+    it('should use fileData for external URL images on gemini-3+', async () => {
+      const imageUrl = 'https://example.com/image.png';
+
+      vi.mocked(parseDataUri).mockReturnValueOnce({
+        base64: null,
+        mimeType: null,
+        type: 'url',
+      });
+
+      vi.mocked(isPublicExternalUrl).mockReturnValueOnce(true);
+      vi.mocked(validateExternalUrl).mockResolvedValueOnce({
+        contentLength: 1024,
+        contentType: 'image/png',
+        isValid: true,
+      });
+
+      const imageToBase64Spy = vi
+        .spyOn(imageToBase64Module, 'imageUrlToBase64')
+        .mockResolvedValueOnce({
+          base64: 'mockBase64Data',
+          mimeType: 'image/png',
+        });
+
+      const content: UserMessageContentPart = {
+        image_url: { url: imageUrl },
+        type: 'image_url',
+      };
+
+      const result = await buildGooglePart(content, { model: 'gemini-3-flash-preview' });
+
+      expect(result).toEqual({
+        fileData: {
+          fileUri: imageUrl,
+          mimeType: 'image/png',
+        },
+        thoughtSignature: GEMINI_MAGIC_THOUGHT_SIGNATURE,
+      });
+
+      expect(imageToBase64Spy).not.toHaveBeenCalled();
+    });
+
+    it('should force inlineData for external URL images on gemini-2.5 and earlier', async () => {
+      const imageUrl = 'https://example.com/image.png';
+
+      vi.mocked(parseDataUri).mockReturnValueOnce({
+        base64: null,
+        mimeType: null,
+        type: 'url',
+      });
+
+      const imageToBase64Spy = vi
+        .spyOn(imageToBase64Module, 'imageUrlToBase64')
+        .mockResolvedValueOnce({
+          base64: 'mockBase64Data',
+          mimeType: 'image/png',
+        });
+
+      const content: UserMessageContentPart = {
+        image_url: { url: imageUrl },
+        type: 'image_url',
+      };
+
+      const result = await buildGooglePart(content, { model: 'gemini-2.5-flash' });
+
+      expect(result).toEqual({
+        inlineData: {
+          data: 'mockBase64Data',
+          mimeType: 'image/png',
+        },
+        thoughtSignature: GEMINI_MAGIC_THOUGHT_SIGNATURE,
+      });
+
+      expect(imageToBase64Spy).toHaveBeenCalledWith(imageUrl);
+      expect(isPublicExternalUrl).not.toHaveBeenCalled();
+      expect(validateExternalUrl).not.toHaveBeenCalled();
+    });
+
     it('should throw when external URL exceeds size limit', async () => {
       const imageUrl = 'https://example.com/large-image.png';
 
