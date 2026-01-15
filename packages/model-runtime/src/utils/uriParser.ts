@@ -102,12 +102,19 @@ export const isPublicExternalUrl = (url: string): boolean => {
 export const validateExternalUrl = async (url: string): Promise<ExternalUrlValidation> => {
   try {
     // Perform HEAD request to get headers without downloading the file
-    const res = await ssrfSafeFetch(url, {
-      headers: {
-        'User-Agent': 'LobeChat/1.0 (https://lobehub.com)',
+    const res = await ssrfSafeFetch(
+      url,
+      {
+        headers: {
+          'User-Agent': 'LobeChat/1.0 (https://lobehub.com)',
+        },
+        method: 'HEAD',
       },
-      method: 'HEAD',
-    });
+      {
+        allowIPAddressList: [],
+        allowPrivateIPAddress: false,
+      },
+    );
 
     if (!res.ok) {
       return {
