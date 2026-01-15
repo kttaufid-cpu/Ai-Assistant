@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { Type as SchemaType } from '@google/genai';
 import * as imageToBase64Module from '@lobechat/utils';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ChatCompletionTool, OpenAIChatMessage, UserMessageContentPart } from '../../types';
 import { isPublicExternalUrl, parseDataUri, validateExternalUrl } from '../../utils/uriParser';
@@ -27,6 +27,10 @@ vi.mock('../../utils/imageToBase64', () => ({
 
 describe('google contextBuilders', () => {
   describe('buildGooglePart', () => {
+    beforeEach(() => {
+      vi.restoreAllMocks();
+    });
+
     it('should handle text type messages', async () => {
       const content: UserMessageContentPart = {
         text: 'Hello',
