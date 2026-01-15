@@ -12,7 +12,7 @@ const AudioFileListViewer = memo<AudioFileListViewerProps>(({ items }) => {
     <Flexbox gap={8}>
       {items.map((item) => (
         <Flexbox gap={4} key={item.id}>
-          <audio controls style={{ width: '100%' }}>
+          <audio controls preload={'metadata'} style={{ minWidth: 280, width: '100%' }}>
             <source src={item.url} />
             {item.alt}
           </audio>
