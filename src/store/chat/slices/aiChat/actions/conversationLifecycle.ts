@@ -177,7 +177,7 @@ export const conversationLifecycle: StateCreator<
       .filter((f) => f.file?.type?.startsWith('audio'))
       .map((f) => ({
         id: f.id,
-        url: f.fileUrl || f.previewUrl || '',
+        url: f.fileUrl || f.base64Url || f.previewUrl || '',
         alt: f.file?.name || f.id,
       }));
 
