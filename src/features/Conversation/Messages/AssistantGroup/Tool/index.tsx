@@ -2,9 +2,9 @@ import { LOADING_FLAT } from '@lobechat/const';
 import { type ChatToolResult, type ToolIntervention } from '@lobechat/types';
 import { AccordionItem, Flexbox, Skeleton } from '@lobehub/ui';
 import { Divider } from 'antd';
-import dynamic from 'next/dynamic';
 import { memo, useEffect, useState } from 'react';
 
+import dynamic from '@/libs/next/dynamic';
 import { useChatStore } from '@/store/chat';
 import { operationSelectors } from '@/store/chat/slices/operation/selectors';
 import { useToolStore } from '@/store/tool';
@@ -21,7 +21,7 @@ const Debug = dynamic(() => import('./Debug'), {
   ssr: false,
 });
 
-const Render = dynamic(() => import('./Render'), {
+const Detail = dynamic(() => import('./Detail'), {
   loading: () => <Skeleton.Block active height={120} width={'100%'} />,
   ssr: false,
 });
@@ -30,6 +30,7 @@ export interface GroupToolProps {
   apiName: string;
   arguments?: string;
   assistantMessageId: string;
+  disableEditing?: boolean;
   id: string;
   identifier: string;
   intervention?: ToolIntervention;
@@ -43,6 +44,7 @@ const Tool = memo<GroupToolProps>(
     arguments: requestArgs,
     apiName,
     assistantMessageId,
+    disableEditing,
     id,
     intervention,
     identifier,
@@ -55,15 +57,15 @@ const Tool = memo<GroupToolProps>(
       toolSelectors.getRenderDisplayControl(identifier, apiName),
     );
     const [showDebug, setShowDebug] = useState(false);
-    const [showPluginRender, setShowPluginRender] = useState(false);
+    const [showToolRender, setShowToolRender] = useState(false);
+    // Controls switching between custom render and fallback ArgumentRender
+    const [showCustomToolRender, setShowCustomToolRender] = useState(true);
 
     const isPending = intervention?.status === 'pending';
     const isReject = intervention?.status === 'rejected';
     const isAbort = intervention?.status === 'aborted';
     const needExpand = renderDisplayControl !== 'collapsed' || isPending;
     const isAlwaysExpand = renderDisplayControl === 'alwaysExpand';
-
-    const showCustomPluginRender = !isPending && !isReject && !isAbort;
 
     let isArgumentsStreaming = false;
     try {
@@ -86,14 +88,16 @@ const Tool = memo<GroupToolProps>(
     const isToolCalling = isToolCallingFromOperation || isToolCallingFallback;
 
     const hasCustomRender = !!getBuiltinRender(identifier, apiName);
+    // Only allow toggle when has custom render and not in pending/reject/abort state
+    const canToggleCustomToolRender = hasCustomRender && !isPending && !isReject && !isAbort;
 
-    // Handle expand state changes with showPluginRender
+    // Handle expand state changes
     const handleExpand = (expand?: boolean) => {
       // Block collapse action when alwaysExpand is set
       if (isAlwaysExpand && expand === false) {
         return;
       }
-      setShowPluginRender(!!expand);
+      setShowToolRender(!!expand);
     };
 
     useEffect(() => {
@@ -102,25 +106,26 @@ const Tool = memo<GroupToolProps>(
       }
     }, [needExpand]);
 
-    const isToolRenderExpand = forceShowStreamingRender || showPluginRender;
+    const isToolDetailExpand = forceShowStreamingRender || showToolRender || showDebug;
+
     return (
       <AccordionItem
         action={
-          <Actions
-            assistantMessageId={assistantMessageId}
-            handleExpand={handleExpand}
-            identifier={identifier}
-            setShowDebug={setShowDebug}
-            setShowPluginRender={setShowPluginRender}
-            showCustomPluginRender={showCustomPluginRender}
-            showDebug={showDebug}
-            showPluginRender={showPluginRender}
-          />
+          !disableEditing && (
+            <Actions
+              assistantMessageId={assistantMessageId}
+              canToggleCustomToolRender={canToggleCustomToolRender}
+              identifier={identifier}
+              setShowCustomToolRender={setShowCustomToolRender}
+              setShowDebug={setShowDebug}
+              showCustomToolRender={showCustomToolRender}
+              showDebug={showDebug}
+            />
+          )
         }
-        allowExpand={hasCustomRender}
-        expand={isToolRenderExpand}
+        expand={isToolDetailExpand}
         itemKey={id}
-        onExpandChange={setShowPluginRender}
+        onExpandChange={handleExpand}
         paddingBlock={4}
         paddingInline={4}
         title={
@@ -147,17 +152,17 @@ const Tool = memo<GroupToolProps>(
             />
           )}
           <ToolErrorBoundary apiName={apiName} identifier={identifier}>
-            <Render
+            <Detail
               apiName={apiName}
               arguments={requestArgs}
+              disableEditing={disableEditing}
               identifier={identifier}
               intervention={intervention}
               isArgumentsStreaming={isArgumentsStreaming}
               isToolCalling={isToolCalling}
               messageId={assistantMessageId}
               result={result}
-              setShowPluginRender={setShowPluginRender}
-              showPluginRender={showPluginRender}
+              showCustomToolRender={showCustomToolRender}
               toolCallId={id}
               toolMessageId={toolMessageId}
               type={type}
