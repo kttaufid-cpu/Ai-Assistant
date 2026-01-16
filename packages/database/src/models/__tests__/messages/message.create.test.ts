@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { uuid } from '@/utils/uuid';
 
+import { getTestDB } from '../../../core/getTestDB';
 import {
   chatGroups,
   chunks,
@@ -19,7 +20,6 @@ import {
 } from '../../../schemas';
 import { LobeChatDatabase } from '../../../type';
 import { MessageModel } from '../../message';
-import { getTestDB } from '../../../core/getTestDB';
 import { codeEmbedding } from '../fixtures/embedding';
 
 const serverDB: LobeChatDatabase = await getTestDB();
@@ -367,8 +367,13 @@ describe('MessageModel Create Tests', () => {
       // Call batchCreateMessages method
       await messageModel.batchCreate(newMessages);
 
-      // Assert result
-      const result = await serverDB.select().from(messages).where(eq(messages.userId, userId));
+      // Assert result - use orderBy to ensure consistent ordering
+      const result = await serverDB
+        .select()
+        .from(messages)
+        .where(eq(messages.userId, userId))
+        .orderBy(messages.id);
+
       expect(result).toHaveLength(2);
       expect(result[0].content).toBe('message 1');
       expect(result[1].content).toBe('message 2');
