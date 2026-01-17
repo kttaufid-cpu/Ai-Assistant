@@ -345,6 +345,7 @@ export const createAiProviderSlice: StateCreator<
     );
 
     await get().refreshAiProviderDetail();
+    await get().refreshAiProviderRuntimeState();
 
     get().internal_toggleAiProviderConfigUpdating(id, false);
   },
