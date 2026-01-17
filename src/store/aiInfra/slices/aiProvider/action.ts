@@ -246,10 +246,29 @@ export const createAiProviderSlice: StateCreator<
     await get().refreshAiProviderRuntimeState();
   },
   refreshAiProviderRuntimeState: async () => {
-    await Promise.all([
-      mutate([AiProviderSwrKey.fetchAiProviderRuntimeState, true]),
-      mutate([AiProviderSwrKey.fetchAiProviderRuntimeState, false]),
-    ]);
+    // Directly fetch and update store instead of relying on SWR mutate
+    // This ensures the store is updated even if the SWR hook is not active
+    try {
+      const data = await aiProviderService.getAiProviderRuntimeState();
+      const [enabledChatModelList, enabledImageModelList] = await Promise.all([
+        buildChatProviderModelLists(data.enabledChatAiProviders, data.enabledAiModels),
+        buildImageProviderModelLists(data.enabledImageAiProviders, data.enabledAiModels),
+      ]);
+
+      set(
+        {
+          aiProviderRuntimeConfig: data.runtimeConfig,
+          enabledAiModels: data.enabledAiModels,
+          enabledAiProviders: data.enabledAiProviders,
+          enabledChatModelList,
+          enabledImageModelList,
+        },
+        false,
+        'refreshAiProviderRuntimeState',
+      );
+    } catch (error) {
+      console.error('[refreshAiProviderRuntimeState] Failed to refresh:', error);
+    }
   },
   removeAiProvider: async (id) => {
     await aiProviderService.deleteAiProvider(id);
