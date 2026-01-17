@@ -1,3 +1,4 @@
+import type { AssistantContentBlock, ChatToolPayloadWithResult } from '@lobechat/types';
 import type { StateCreator } from 'zustand';
 
 import { MESSAGE_CANCEL_FLAT } from '@/const/index';
@@ -5,6 +6,7 @@ import { useChatStore } from '@/store/chat';
 import { AI_RUNTIME_OPERATION_TYPES } from '@/store/chat/slices/operation/types';
 
 import type { Store as ConversationStore } from '../../action';
+import { dataSelectors } from '../data/selectors';
 
 /**
  * Generation Actions
@@ -206,8 +208,18 @@ export const generationSlice: StateCreator<
   },
 
   delAndRegenerateMessage: async (messageId: string) => {
-    const { context } = get();
+    const { context, dbMessages, displayMessages } = get();
     const chatStore = useChatStore.getState();
+
+    // Get the message to find its parent (user message)
+    const message = dbMessages.find((m) => m.id === messageId);
+    const parentId = message?.parentId;
+
+    if (!parentId) return;
+
+    // Find parent message in displayMessages for regeneration context
+    const parentMessage = displayMessages.find((m) => m.id === parentId);
+    if (!parentMessage || parentMessage.role !== 'user') return;
 
     // Create operation to track context (use 'regenerate' type since this is a regenerate action)
     const { operationId } = chatStore.startOperation({
@@ -215,15 +227,61 @@ export const generationSlice: StateCreator<
       type: 'regenerate',
     });
 
+    // Collect IDs to delete BEFORE regeneration (because displayMessage may change after branch switch)
+    const displayMessage = dataSelectors.getDisplayMessageById(messageId)(get());
+    let idsToDelete = [messageId];
+    if (displayMessage && displayMessage.role === 'assistantGroup' && displayMessage.children) {
+      const childIds = (displayMessage.children as AssistantContentBlock[]).map((c) => c.id);
+      const toolResultIds = (displayMessage.children as AssistantContentBlock[]).flatMap(
+        (child) => {
+          if (!child.tools) return [];
+          return child.tools
+            .filter((tool: ChatToolPayloadWithResult) => tool.result?.id)
+            .map((tool: ChatToolPayloadWithResult) => tool.result!.id);
+        },
+      );
+      idsToDelete = [messageId, ...childIds, ...toolResultIds];
+    }
+
     // Regenerate first, then delete
-    await get().regenerateAssistantMessage(messageId);
-    await chatStore.deleteMessage(messageId, { operationId });
+    // This avoids the UI "jump" that happens with delete-first approach:
+    // - Delete first would switch to another branch, then regenerate switches back
+    // - Regenerate first switches to new branch, then we delete the old one
+    await get().regenerateUserMessage(parentId);
+
+    // Delete using deleteDBMessage/deleteMessages to avoid activeBranchIndex adjustment
+    // The branch is already switched by regenerateUserMessage, so we just need to clean up
+    if (idsToDelete.length > 1) {
+      await get().deleteMessages(idsToDelete);
+    } else {
+      await get().deleteDBMessage(messageId);
+    }
+
+    // After delete, adjust activeBranchIndex
+    // When we regenerate, the new branch index = old children count (e.g., 3 for 4th branch)
+    // After deleting one old branch, the new branch's actual index is now (old index - 1)
+    // So we need to switch to the correct index
+    const updatedDbMessages = get().dbMessages;
+    const newChildrenCount = updatedDbMessages.filter((m) => m.parentId === parentId).length;
+    // The new branch is now at index (newChildrenCount - 1), which is the last child
+    await chatStore.switchMessageBranch(parentId, newChildrenCount - 1, { operationId });
+
     chatStore.completeOperation(operationId);
   },
 
   delAndResendThreadMessage: async (messageId: string) => {
-    const { context } = get();
+    const { context, dbMessages, displayMessages } = get();
     const chatStore = useChatStore.getState();
+
+    // Get the message to find its parent (user message)
+    const message = dbMessages.find((m) => m.id === messageId);
+    const parentId = message?.parentId;
+
+    if (!parentId) return;
+
+    // Find parent message in displayMessages for resend context
+    const parentMessage = displayMessages.find((m) => m.id === parentId);
+    if (!parentMessage || parentMessage.role !== 'user') return;
 
     // Create operation to track context (use 'regenerate' type since resend is essentially regenerate)
     const { operationId } = chatStore.startOperation({
@@ -231,9 +289,38 @@ export const generationSlice: StateCreator<
       type: 'regenerate',
     });
 
-    // Resend then delete
-    await get().resendThreadMessage(messageId);
-    await chatStore.deleteMessage(messageId, { operationId });
+    // Collect IDs to delete BEFORE resend (because displayMessage may change after branch switch)
+    const displayMessage = dataSelectors.getDisplayMessageById(messageId)(get());
+    let idsToDelete = [messageId];
+    if (displayMessage && displayMessage.role === 'assistantGroup' && displayMessage.children) {
+      const childIds = (displayMessage.children as AssistantContentBlock[]).map((c) => c.id);
+      const toolResultIds = (displayMessage.children as AssistantContentBlock[]).flatMap(
+        (child) => {
+          if (!child.tools) return [];
+          return child.tools
+            .filter((tool: ChatToolPayloadWithResult) => tool.result?.id)
+            .map((tool: ChatToolPayloadWithResult) => tool.result!.id);
+        },
+      );
+      idsToDelete = [messageId, ...childIds, ...toolResultIds];
+    }
+
+    // Resend first, then delete (same approach as delAndRegenerateMessage)
+    // This avoids UI "jump" - resend switches to new branch, then we clean up old one
+    await get().resendThreadMessage(parentId);
+
+    // Delete using deleteDBMessage/deleteMessages to avoid activeBranchIndex adjustment
+    if (idsToDelete.length > 1) {
+      await get().deleteMessages(idsToDelete);
+    } else {
+      await get().deleteDBMessage(messageId);
+    }
+
+    // After delete, adjust activeBranchIndex (same as delAndRegenerateMessage)
+    const updatedDbMessages = get().dbMessages;
+    const newChildrenCount = updatedDbMessages.filter((m) => m.parentId === parentId).length;
+    await chatStore.switchMessageBranch(parentId, newChildrenCount - 1, { operationId });
+
     chatStore.completeOperation(operationId);
   },
 

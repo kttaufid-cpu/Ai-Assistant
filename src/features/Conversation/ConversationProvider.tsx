@@ -4,6 +4,7 @@ import type { UIChatMessage } from '@lobechat/types';
 import isEqual from 'fast-deep-equal';
 import { type ReactNode, memo } from 'react';
 
+import HotkeyRegistry from './HotkeyRegistry';
 import StoreUpdater from './StoreUpdater';
 import { Provider, createStore } from './store';
 import type {
@@ -87,6 +88,7 @@ export const ConversationProvider = memo<ConversationProviderProps>(
           operationState={operationState}
           skipFetch={skipFetch}
         />
+        <HotkeyRegistry />
         {children}
       </Provider>
     );
