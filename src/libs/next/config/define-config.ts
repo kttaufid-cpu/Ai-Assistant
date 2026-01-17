@@ -314,7 +314,7 @@ export function defineConfig(config: CustomNextConfig) {
     // when external packages in dev mode with turbopack, this config will lead to bundle error
     serverExternalPackages: config.serverExternalPackages
       ? config.serverExternalPackages
-      : ['pdfkit'],
+      : ['pdfkit', 'oidc-provider'],
 
     transpilePackages: ['pdfjs-dist', 'mermaid', 'better-auth-harmony'],
     turbopack: {
